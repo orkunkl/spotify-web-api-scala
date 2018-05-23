@@ -1,0 +1,1446 @@
+diff --git a/build.sbt b/build.sbt
+index cea2389..a4cb61e 100644
+--- a/build.sbt
++++ b/build.sbt
+@@ -1,11 +1,16 @@
++
+ name := "spotify-web-api-scala"
+ version := "1.0"
+-scalaVersion := "2.11.8"
+-
++scalaVersion := "2.12.5"
+ 
+-resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
+-libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.3.0"
+-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.0"
+-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+-libraryDependencies += "org.json4s" %% "json4s-native" % "3.4.0"
+-libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.4.0"
++libraryDependencies ++= Seq(
++  "com.typesafe" % "config" % "1.3.2",
++  "com.github.kxbmap" %% "configs" % "0.4.4",
++  //"com.typesafe.play" %% "play-json" % "2.6.7",
++  "org.scalaj" %% "scalaj-http" % "2.3.0",
++  "org.json4s" %% "json4s-native" % "3.5.3",
++  "org.json4s" %% "json4s-jackson" % "3.5.3",
++  "com.github.kxbmap" %% "configs" % "0.4.4",
++  "org.scalactic" %% "scalactic" % "3.0.0" % Test,
++  "org.scalatest" %% "scalatest" % "3.0.0" % Test
++)
+diff --git a/project/plugins.sbt b/project/plugins.sbt
+index eba610f..e2646bd 100644
+--- a/project/plugins.sbt
++++ b/project/plugins.sbt
+@@ -1,2 +1,2 @@
+ resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
+-addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.0")
++addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.5")
+\ No newline at end of file
+diff --git a/src/main/scala/SpotifyClient.scala b/src/main/scala/SpotifyClient.scala
+index bda1682..eb59e76 100644
+--- a/src/main/scala/SpotifyClient.scala
++++ b/src/main/scala/SpotifyClient.scala
+@@ -5,7 +5,6 @@ import models._
+ import org.json4s._
+ import org.json4s.jackson.JsonMethods._
+ 
+-
+ /**
+   * SpotifyClient is the main class used to interact with the Spotify API's.
+   *
+@@ -16,28 +15,32 @@ import org.json4s.jackson.JsonMethods._
+   * @param authToken oauthToken used to make API calls which require authorization
+   *
+   */
+-
+ class SpotifyClient(authToken: String = "") {
+ 
+   implicit val formats = new DefaultFormats {
+-    override def dateFormatter: SimpleDateFormat = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:SS'Z'")
++    override def dateFormatter: SimpleDateFormat =
++      new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:SS'Z'")
+   }
+ 
+   object Albums {
+ 
+     def getUserSavedAlbums: Option[Page[SavedAlbum]] =
+-      MeEndpoint.getUserSavedAlbums(oauthToken = authToken)
++      MeEndpoint
++        .getUserSavedAlbums(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[SavedAlbum]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def userSavedAlbumsContains(albumIds: Seq[String]): Option[List[Boolean]] =
+-      MeEndpoint.userSavedAlbumsContains(oauthToken = authToken, albumIds)
++      MeEndpoint
++        .userSavedAlbumsContains(oauthToken = authToken, albumIds)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[List[Boolean]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getAlbum(albumId: String): Album = {
+       val response = AlbumsEndpoint.getAlbum(albumId).asString
+@@ -90,85 +93,102 @@ class SpotifyClient(authToken: String = "") {
+   object AudioFeatures {
+ 
+     def getAudioFeatures(trackId: String): Option[AudioFeatures] =
+-      AudioFeaturesEndpoint.getAudioFeatures(oauthToken = authToken, trackId = trackId)
++      AudioFeaturesEndpoint
++        .getAudioFeatures(oauthToken = authToken, trackId = trackId)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[AudioFeatures]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getAudioFeatures(trackIds: Seq[String]): Option[Seq[AudioFeatures]] =
+-      AudioFeaturesEndpoint.getMultipleAudioFeatures(oauthToken = authToken, trackIds)
++      AudioFeaturesEndpoint
++        .getMultipleAudioFeatures(oauthToken = authToken, trackIds)
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           (json \ "audio_features").extract[List[AudioFeatures]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+   }
+ 
+   object Browse {
+ 
+     def getFeaturedPlaylists: Option[FeaturedPlaylist] =
+-      BrowseEndpoint.getFeaturedPlaylists(oauthToken = authToken)
++      BrowseEndpoint
++        .getFeaturedPlaylists(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           val message = (json \ "message").extract[String]
+           val playlists = (json \ "playlists").extract[Page[PlaylistSimple]]
+           FeaturedPlaylist(message, playlists)
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getNewReleases: Option[Page[AlbumSimple]] =
+-      BrowseEndpoint.getNewReleases(oauthToken = authToken)
++      BrowseEndpoint
++        .getNewReleases(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           (json \ "albums").extract[Page[AlbumSimple]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getCategories: Option[Page[Category]] =
+-      BrowseEndpoint.getCategories(oauthToken = authToken)
++      BrowseEndpoint
++        .getCategories(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           (json \ "categories").extract[Page[Category]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getCategory(categoryId: String): Option[Category] =
+-      BrowseEndpoint.getCategory(oauthToken = authToken, categoryId = categoryId)
++      BrowseEndpoint
++        .getCategory(oauthToken = authToken, categoryId = categoryId)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Category]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getCategoryPlaylists(categoryId: String): Option[Page[PlaylistSimple]] =
+-      BrowseEndpoint.getCategoryPlaylists(oauthToken = authToken, categoryId = categoryId)
++      BrowseEndpoint
++        .getCategoryPlaylists(oauthToken = authToken, categoryId = categoryId)
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           (json \ "playlists").extract[Page[PlaylistSimple]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+   }
+ 
+   object Recommendations {
+ 
+-    def getRecommendations(seedArtists: Seq[String] = Seq.empty,
+-                           seedGenres: Seq[String] = Seq.empty,
+-                           seedTracks: Seq[String] = Seq.empty): Option[Recommendations] =
+-
+-      RecommendationsEndpoint.getRecommendations(authToken = authToken,
+-        seedArtists = seedArtists,
+-        seedGenres = seedGenres,
+-        seedTracks = seedTracks)
++    def getRecommendations(
++        seedArtists: Seq[String] = Seq.empty,
++        seedGenres: Seq[String] = Seq.empty,
++        seedTracks: Seq[String] = Seq.empty): Option[Recommendations] =
++      RecommendationsEndpoint
++        .getRecommendations(authToken = authToken,
++                            seedArtists = seedArtists,
++                            seedGenres = seedGenres,
++                            seedTracks = seedTracks)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Recommendations]
+-        }).orElse(None)
++        })
++        .orElse(None)
+   }
+ 
+   object Search {
+ 
+     def search(query: String, queryType: Seq[String]): SearchResult = {
+-      val response = SearchEndpoint.search(query.replace(" ", "+"), queryType).asString
++      val response =
++        SearchEndpoint.search(query.replace(" ", "+"), queryType).asString
+       parse(response.body).extract[SearchResult]
+     }
+   }
+@@ -187,94 +207,120 @@ class SpotifyClient(authToken: String = "") {
+     }
+ 
+     def getUserSavedTracks: Option[Page[SavedTrack]] =
+-      MeEndpoint.getUserTracks(oauthToken = authToken)
++      MeEndpoint
++        .getUserTracks(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[SavedTrack]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def userSavedTracksContains(trackIds: Seq[String]): Option[List[Boolean]] =
+-      MeEndpoint.userTracksContains(oauthToken = authToken, trackIds = trackIds)
++      MeEndpoint
++        .userTracksContains(oauthToken = authToken, trackIds = trackIds)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[List[Boolean]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+   }
+ 
+   object Users {
+ 
+     def getCurrentUserPlaylists: Option[Page[PlaylistSimple]] =
+-      MeEndpoint.getCurrentUserPlaylists(oauthToken = authToken)
++      MeEndpoint
++        .getCurrentUserPlaylists(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[PlaylistSimple]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserPlaylist(userId: String, playlistId: String): Option[Playlist] =
+-      UsersEndpoint.getUserPlaylist(authToken = authToken, userId = userId, playlistId = playlistId)
++      UsersEndpoint
++        .getUserPlaylist(authToken = authToken,
++                         userId = userId,
++                         playlistId = playlistId)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Playlist]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserPlaylists(userId: String): Option[Page[PlaylistSimple]] =
+-      UsersEndpoint.getUserPlaylists(authToken = authToken, userId = userId)
++      UsersEndpoint
++        .getUserPlaylists(authToken = authToken, userId = userId)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[PlaylistSimple]]
+-        }).orElse(None)
+-
+-    def getUserPlaylistTracks(userId: String, playlistId: String): Option[Page[PlaylistTrack]] =
+-      UsersEndpoint.getUserPlaylistTracks(authToken = authToken, userId = userId, playlistId = playlistId)
++        })
++        .orElse(None)
++
++    def getUserPlaylistTracks(userId: String,
++                              playlistId: String): Option[Page[PlaylistTrack]] =
++      UsersEndpoint
++        .getUserPlaylistTracks(authToken = authToken,
++                               userId = userId,
++                               playlistId = playlistId)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[PlaylistTrack]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def usersFollowPlaylist(playlistOwnerId: String,
+                             playlistId: String,
+                             userIds: Seq[String]): Option[List[Boolean]] =
+-      UsersEndpoint.userFollowsPlaylist(
+-        authToken = authToken,
+-        playlistOwnerId = playlistOwnerId,
+-        playlistId = playlistId,
+-        userIds = userIds)
++      UsersEndpoint
++        .userFollowsPlaylist(authToken = authToken,
++                             playlistOwnerId = playlistOwnerId,
++                             playlistId = playlistId,
++                             userIds = userIds)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[List[Boolean]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserFollowing: Option[CursorPage[Artist]] =
+-      MeEndpoint.getUserFollowing(oauthToken = authToken, `type` = "artist")
++      MeEndpoint
++        .getUserFollowing(oauthToken = authToken, `type` = "artist")
+         .map(request => {
+           val response = request.asString
+           val json = parse(response.body)
+           (json \ "artists").extract[CursorPage[Artist]]
+-        }).orElse(None)
+-
+-    def currentUserFollowingContains(containsType: String, ids: Seq[String]): Option[List[Boolean]] =
+-      MeEndpoint.userFollowingContains(
+-        oauthToken = authToken,
+-        containsType = containsType,
+-        ids = ids)
++        })
++        .orElse(None)
++
++    def currentUserFollowingContains(containsType: String,
++                                     ids: Seq[String]): Option[List[Boolean]] =
++      MeEndpoint
++        .userFollowingContains(oauthToken = authToken,
++                               containsType = containsType,
++                               ids = ids)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[List[Boolean]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserTopArtists: Option[Page[Artist]] =
+-      MeEndpoint.getUserTopArtists(oauthToken = authToken)
++      MeEndpoint
++        .getUserTopArtists(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[Artist]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserTopTracks: Option[Page[Track]] =
+-      MeEndpoint.getUserTopTracks(oauthToken = authToken)
++      MeEndpoint
++        .getUserTopTracks(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[Page[Track]]
+-        }).orElse(None)
++        })
++        .orElse(None)
+ 
+     def getUserProfile(userId: String): PublicUser = {
+       val response = UsersEndpoint.getUserProfile(userId).asString
+@@ -282,11 +328,13 @@ class SpotifyClient(authToken: String = "") {
+     }
+ 
+     def getCurrentUserProfile: Option[PrivateUser] = {
+-      MeEndpoint.getCurrentUserProfile(oauthToken = authToken)
++      MeEndpoint
++        .getCurrentUserProfile(oauthToken = authToken)
+         .map(request => {
+           val response = request.asString
+           parse(response.body).extract[PrivateUser]
+-        }).orElse(None)
++        })
++        .orElse(None)
+     }
+   }
+ }
+diff --git a/src/main/scala/endpoints/AlbumsEndpoint.scala b/src/main/scala/endpoints/AlbumsEndpoint.scala
+index 3471063..16956cc 100644
+--- a/src/main/scala/endpoints/AlbumsEndpoint.scala
++++ b/src/main/scala/endpoints/AlbumsEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object AlbumsEndpoint extends SpotifyEndpoint {
+ 
+   private val albumEndpoint = baseAPIUrl + "/v1/albums/"
+@@ -12,7 +11,8 @@ object AlbumsEndpoint extends SpotifyEndpoint {
+   }
+ 
+   def getAlbums(albumIds: Seq[String]): HttpRequest = {
+-    createRequest(endpoint = albumEndpoint, params = Seq(("ids", albumIds.mkString(","))))
++    createRequest(endpoint = albumEndpoint,
++                  params = Seq(("ids", albumIds.mkString(","))))
+   }
+ 
+   def getAlbumTracks(albumId: String): HttpRequest = {
+diff --git a/src/main/scala/endpoints/ArtistsEndpoint.scala b/src/main/scala/endpoints/ArtistsEndpoint.scala
+index 570987e..9431980 100644
+--- a/src/main/scala/endpoints/ArtistsEndpoint.scala
++++ b/src/main/scala/endpoints/ArtistsEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object ArtistsEndpoint extends SpotifyEndpoint {
+ 
+   private val artistEndpoint = baseAPIUrl + "/v1/artists/"
+@@ -12,15 +11,18 @@ object ArtistsEndpoint extends SpotifyEndpoint {
+   }
+ 
+   def getArtists(artistIds: Seq[String]): HttpRequest = {
+-    createRequest(endpoint = artistEndpoint, params = Seq(("ids", artistIds.mkString(","))))
++    createRequest(endpoint = artistEndpoint,
++                  params = Seq(("ids", artistIds.mkString(","))))
+   }
+ 
+   def getArtistAlbums(artistId: String): HttpRequest = {
+     createRequest(endpoint = artistEndpoint + artistId + "/albums")
+   }
+ 
+-  def getArtistTopTracks(artistId: String, country: String = "US"): HttpRequest = {
+-    createRequest(endpoint = artistEndpoint + artistId + "/top-tracks", params = Seq(("country", country)))
++  def getArtistTopTracks(artistId: String,
++                         country: String = "US"): HttpRequest = {
++    createRequest(endpoint = artistEndpoint + artistId + "/top-tracks",
++                  params = Seq(("country", country)))
+   }
+ 
+   def getRelatedArtists(artistId: String): HttpRequest = {
+diff --git a/src/main/scala/endpoints/AudioFeaturesEndpoint.scala b/src/main/scala/endpoints/AudioFeaturesEndpoint.scala
+index 3583e23..f80ad33 100644
+--- a/src/main/scala/endpoints/AudioFeaturesEndpoint.scala
++++ b/src/main/scala/endpoints/AudioFeaturesEndpoint.scala
+@@ -6,11 +6,16 @@ object AudioFeaturesEndpoint extends OauthSpotifyEndpoint {
+ 
+   private val audioFeaturesEndpoint = baseAPIUrl + "/v1/audio-features/"
+ 
+-  def getAudioFeatures(oauthToken: String, trackId: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = audioFeaturesEndpoint + trackId)
++  def getAudioFeatures(oauthToken: String,
++                       trackId: String): Option[HttpRequest] = {
++    createRequest(authToken = oauthToken,
++                  endpoint = audioFeaturesEndpoint + trackId)
+   }
+ 
+-  def getMultipleAudioFeatures(oauthToken: String, trackIds: Seq[String]): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = audioFeaturesEndpoint, params = Seq(("ids", trackIds.mkString(","))))
++  def getMultipleAudioFeatures(oauthToken: String,
++                               trackIds: Seq[String]): Option[HttpRequest] = {
++    createRequest(authToken = oauthToken,
++                  endpoint = audioFeaturesEndpoint,
++                  params = Seq(("ids", trackIds.mkString(","))))
+   }
+ }
+diff --git a/src/main/scala/endpoints/BrowseEndpoint.scala b/src/main/scala/endpoints/BrowseEndpoint.scala
+index f2da924..c07a383 100644
+--- a/src/main/scala/endpoints/BrowseEndpoint.scala
++++ b/src/main/scala/endpoints/BrowseEndpoint.scala
+@@ -7,23 +7,31 @@ object BrowseEndpoint extends OauthSpotifyEndpoint {
+   private val browseEndpoint = baseAPIUrl + "/v1/browse/"
+ 
+   def getFeaturedPlaylists(oauthToken: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = browseEndpoint + "featured-playlists")
++    createRequest(authToken = oauthToken,
++                  endpoint = browseEndpoint + "featured-playlists")
+   }
+ 
+   def getNewReleases(oauthToken: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = browseEndpoint + "new-releases")
++    createRequest(authToken = oauthToken,
++                  endpoint = browseEndpoint + "new-releases")
+   }
+ 
+   def getCategories(oauthToken: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = browseEndpoint + "categories")
++    createRequest(authToken = oauthToken,
++                  endpoint = browseEndpoint + "categories")
+   }
+ 
+-  def getCategory(oauthToken: String, categoryId: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = browseEndpoint + "categories/" + categoryId)
++  def getCategory(oauthToken: String,
++                  categoryId: String): Option[HttpRequest] = {
++    createRequest(authToken = oauthToken,
++                  endpoint = browseEndpoint + "categories/" + categoryId)
+   }
+ 
+-  def getCategoryPlaylists(oauthToken: String, categoryId: String): Option[HttpRequest] = {
+-    createRequest(authToken = oauthToken, endpoint = browseEndpoint + "categories/" + categoryId + "/playlists")
++  def getCategoryPlaylists(oauthToken: String,
++                           categoryId: String): Option[HttpRequest] = {
++    createRequest(
++      authToken = oauthToken,
++      endpoint = browseEndpoint + "categories/" + categoryId + "/playlists")
+   }
+ 
+ }
+diff --git a/src/main/scala/endpoints/MeEndpoint.scala b/src/main/scala/endpoints/MeEndpoint.scala
+index 1bab890..38404c4 100644
+--- a/src/main/scala/endpoints/MeEndpoint.scala
++++ b/src/main/scala/endpoints/MeEndpoint.scala
+@@ -2,11 +2,9 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ /**
+   * The MeEndpoint contains all API calls which are related to the current user
+   */
+-
+ object MeEndpoint extends OauthSpotifyEndpoint {
+ 
+   private val meEndpoint = baseAPIUrl + "/v1/me/"
+@@ -14,25 +12,29 @@ object MeEndpoint extends OauthSpotifyEndpoint {
+   /**
+     * Albums
+     */
+-
+   def getUserSavedAlbums(oauthToken: String): Option[HttpRequest] =
+     createRequest(authToken = oauthToken, endpoint = meEndpoint + "albums")
+ 
+-
+-  def userSavedAlbumsContains(oauthToken: String, albumIds: Seq[String]): Option[HttpRequest] = {
++  def userSavedAlbumsContains(oauthToken: String,
++                              albumIds: Seq[String]): Option[HttpRequest] = {
+     val endPoint = meEndpoint + "albums/contains"
+-    createRequest(authToken = oauthToken, endpoint = endPoint, params = Seq(("ids", albumIds.mkString(","))))
++    createRequest(authToken = oauthToken,
++                  endpoint = endPoint,
++                  params = Seq(("ids", albumIds.mkString(","))))
+   }
+ 
+   /**
+     * Following
+     */
+-
+-  def getUserFollowing(oauthToken: String, `type`: String): Option[HttpRequest] =
+-    createRequest(authToken = oauthToken, endpoint = meEndpoint + "following", params = Seq(("type", `type`)))
+-
+-
+-  def userFollowingContains(oauthToken: String, containsType: String, ids: Seq[String]): Option[HttpRequest] =
++  def getUserFollowing(oauthToken: String,
++                       `type`: String): Option[HttpRequest] =
++    createRequest(authToken = oauthToken,
++                  endpoint = meEndpoint + "following",
++                  params = Seq(("type", `type`)))
++
++  def userFollowingContains(oauthToken: String,
++                            containsType: String,
++                            ids: Seq[String]): Option[HttpRequest] =
+     containsType.toUpperCase match {
+       case "ARTIST" | "USER" =>
+         val params = Seq(
+@@ -40,28 +42,33 @@ object MeEndpoint extends OauthSpotifyEndpoint {
+           ("ids", ids.mkString(","))
+         )
+         val endpoint = meEndpoint + "following/contains"
+-        createRequest(authToken = oauthToken, endpoint = endpoint, params = params)
++        createRequest(authToken = oauthToken,
++                      endpoint = endpoint,
++                      params = params)
+       case _ => None
+     }
+ 
+   /**
+     * Tracks
+     */
+-
+   def getUserTracks(oauthToken: String): Option[HttpRequest] =
+     createRequest(authToken = oauthToken, endpoint = meEndpoint + "tracks")
+ 
+-  def userTracksContains(oauthToken: String, trackIds: Seq[String]): Option[HttpRequest] = {
++  def userTracksContains(oauthToken: String,
++                         trackIds: Seq[String]): Option[HttpRequest] = {
+     val endpoint = meEndpoint + "tracks/contains"
+-    createRequest(authToken = oauthToken, endpoint = endpoint, params = Seq(("ids", trackIds.mkString(","))))
++    createRequest(authToken = oauthToken,
++                  endpoint = endpoint,
++                  params = Seq(("ids", trackIds.mkString(","))))
+   }
+ 
+   /**
+     * Personalization
+     */
+-
+-  private def getUserTopItems(oauthToken: String, itemType: String): Option[HttpRequest] =
+-    createRequest(authToken = oauthToken, endpoint = meEndpoint + "top/" + itemType)
++  private def getUserTopItems(oauthToken: String,
++                              itemType: String): Option[HttpRequest] =
++    createRequest(authToken = oauthToken,
++                  endpoint = meEndpoint + "top/" + itemType)
+ 
+   def getUserTopArtists(oauthToken: String): Option[HttpRequest] =
+     getUserTopItems(oauthToken, "artists")
+@@ -72,14 +79,12 @@ object MeEndpoint extends OauthSpotifyEndpoint {
+   /**
+     * Playlists
+     */
+-
+   def getCurrentUserPlaylists(oauthToken: String): Option[HttpRequest] =
+     createRequest(authToken = oauthToken, endpoint = meEndpoint + "playlists")
+ 
+   /**
+     * Profiles
+     */
+-
+   def getCurrentUserProfile(oauthToken: String): Option[HttpRequest] = {
+     createRequest(authToken = oauthToken, endpoint = meEndpoint)
+   }
+diff --git a/src/main/scala/endpoints/OauthSpotifyEndpoint.scala b/src/main/scala/endpoints/OauthSpotifyEndpoint.scala
+index 96c5af6..2299de6 100644
+--- a/src/main/scala/endpoints/OauthSpotifyEndpoint.scala
++++ b/src/main/scala/endpoints/OauthSpotifyEndpoint.scala
+@@ -4,27 +4,35 @@ import scalaj.http.{Http, HttpRequest}
+ 
+ abstract class OauthSpotifyEndpoint extends SpotifyEndpoint {
+ 
+-  private def getOauthBearer(authToken: String): Option[String] = authToken match {
+-    case "" => None
+-    case token => Some("Bearer " + token)
+-  }
++  private def getOauthBearer(authToken: String): Option[String] =
++    authToken match {
++      case ""    => None
++      case token => Some("Bearer " + token)
++    }
+ 
+-  private def getAuthHeaders(authToken: String): Option[Map[String, String]] = getOauthBearer(authToken) match {
+-    case None => None
+-    case Some(authHeader) => Some(Map("Authorization" -> authHeader))
+-  }
++  private def getAuthHeaders(authToken: String): Option[Map[String, String]] =
++    getOauthBearer(authToken) match {
++      case None             => None
++      case Some(authHeader) => Some(Map("Authorization" -> authHeader))
++    }
+ 
+-  protected def createRequest(authToken:String, endpoint: String): Option[HttpRequest] = {
+-    getAuthHeaders(authToken).map(headers => {
+-      Some(Http(endpoint).headers(headers))
+-    }).getOrElse(None)
++  protected def createRequest(authToken: String,
++                              endpoint: String): Option[HttpRequest] = {
++    getAuthHeaders(authToken)
++      .map(headers => {
++        Some(Http(endpoint).headers(headers))
++      })
++      .getOrElse(None)
+   }
+ 
+-  protected def createRequest(authToken:String,
+-                            endpoint: String,
+-                            params: Seq[(String, String)]) : Option[HttpRequest] = {
+-    getAuthHeaders(authToken).map(headers => {
+-      Some(Http(endpoint).headers(headers).params(params))
+-    }).getOrElse(None)
++  protected def createRequest(
++      authToken: String,
++      endpoint: String,
++      params: Seq[(String, String)]): Option[HttpRequest] = {
++    getAuthHeaders(authToken)
++      .map(headers => {
++        Some(Http(endpoint).headers(headers).params(params))
++      })
++      .getOrElse(None)
+   }
+ }
+diff --git a/src/main/scala/endpoints/RecommendationsEndpoint.scala b/src/main/scala/endpoints/RecommendationsEndpoint.scala
+index 5d9b74c..f8178cc 100644
+--- a/src/main/scala/endpoints/RecommendationsEndpoint.scala
++++ b/src/main/scala/endpoints/RecommendationsEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object RecommendationsEndpoint extends OauthSpotifyEndpoint {
+ 
+   private val recommendationsEndpoint = baseAPIUrl + "/v1/recommendations/"
+@@ -23,7 +22,9 @@ object RecommendationsEndpoint extends OauthSpotifyEndpoint {
+         ("seed_genres", seedGenres.mkString(",")),
+         ("seed_tracks", seedTracks.mkString(","))
+       )
+-      createRequest(authToken = authToken, endpoint = recommendationsEndpoint, params = params)
++      createRequest(authToken = authToken,
++                    endpoint = recommendationsEndpoint,
++                    params = params)
+     }
+   }
+ }
+diff --git a/src/main/scala/endpoints/SearchEndpoint.scala b/src/main/scala/endpoints/SearchEndpoint.scala
+index c5a6b35..32ebd5f 100644
+--- a/src/main/scala/endpoints/SearchEndpoint.scala
++++ b/src/main/scala/endpoints/SearchEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object SearchEndpoint extends SpotifyEndpoint {
+ 
+   private val searchEndpoint = baseAPIUrl + "/v1/search/"
+diff --git a/src/main/scala/endpoints/SpotifyEndpoint.scala b/src/main/scala/endpoints/SpotifyEndpoint.scala
+index cf51036..e5f8288 100644
+--- a/src/main/scala/endpoints/SpotifyEndpoint.scala
++++ b/src/main/scala/endpoints/SpotifyEndpoint.scala
+@@ -8,7 +8,8 @@ abstract class SpotifyEndpoint {
+ 
+   protected def createRequest(endpoint: String): HttpRequest = Http(endpoint)
+ 
+-  protected def createRequest(endpoint: String, params: Seq[(String, String)]): HttpRequest = {
++  protected def createRequest(endpoint: String,
++                              params: Seq[(String, String)]): HttpRequest = {
+     Http(endpoint).params(params)
+   }
+ }
+diff --git a/src/main/scala/endpoints/TracksEndpoint.scala b/src/main/scala/endpoints/TracksEndpoint.scala
+index 41f5f3c..3817687 100644
+--- a/src/main/scala/endpoints/TracksEndpoint.scala
++++ b/src/main/scala/endpoints/TracksEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object TracksEndpoint extends SpotifyEndpoint {
+ 
+   private val tracksEndpoint = baseAPIUrl + "/v1/tracks/"
+diff --git a/src/main/scala/endpoints/UsersEndpoint.scala b/src/main/scala/endpoints/UsersEndpoint.scala
+index 9f345bb..ce8f371 100644
+--- a/src/main/scala/endpoints/UsersEndpoint.scala
++++ b/src/main/scala/endpoints/UsersEndpoint.scala
+@@ -2,7 +2,6 @@ package endpoints
+ 
+ import scalaj.http.HttpRequest
+ 
+-
+ object UsersEndpoint extends OauthSpotifyEndpoint {
+ 
+   private val usersEndpoint = baseAPIUrl + "/v1/users/"
+@@ -10,27 +9,37 @@ object UsersEndpoint extends OauthSpotifyEndpoint {
+   /**
+     * Playlists
+     */
+-
+-  def getUserPlaylist(authToken: String, userId: String, playlistId: String): Option[HttpRequest] = {
+-    createRequest(authToken = authToken, endpoint = usersEndpoint + userId + "/playlists/" + playlistId)
++  def getUserPlaylist(authToken: String,
++                      userId: String,
++                      playlistId: String): Option[HttpRequest] = {
++    createRequest(
++      authToken = authToken,
++      endpoint = usersEndpoint + userId + "/playlists/" + playlistId)
+   }
+ 
+-  def getUserPlaylists(authToken: String, userId: String): Option[HttpRequest] = {
+-    createRequest(authToken = authToken, endpoint = usersEndpoint + userId + "/playlists")
++  def getUserPlaylists(authToken: String,
++                       userId: String): Option[HttpRequest] = {
++    createRequest(authToken = authToken,
++                  endpoint = usersEndpoint + userId + "/playlists")
+   }
+ 
+-  def getUserPlaylistTracks(authToken: String, userId: String, playlistId: String): Option[HttpRequest] = {
+-    createRequest(authToken = authToken, endpoint = usersEndpoint + userId + "/playlists/" + playlistId + "/tracks")
++  def getUserPlaylistTracks(authToken: String,
++                            userId: String,
++                            playlistId: String): Option[HttpRequest] = {
++    createRequest(
++      authToken = authToken,
++      endpoint = usersEndpoint + userId + "/playlists/" + playlistId + "/tracks")
+   }
+ 
+-  def userFollowsPlaylist( authToken: String,
+-                           playlistOwnerId: String,
+-                           playlistId: String,
+-                           userIds: Seq[String]): Option[HttpRequest] = {
++  def userFollowsPlaylist(authToken: String,
++                          playlistOwnerId: String,
++                          playlistId: String,
++                          userIds: Seq[String]): Option[HttpRequest] = {
+ 
+     // create userIds allowed is 5
+     val userIdsLength = userIds.length
+-    if (userIdsLength > 5) None else {
++    if (userIdsLength > 5) None
++    else {
+       val endpoint = usersEndpoint + playlistOwnerId + "/playlists/" + playlistId + "/followers/contains"
+       val params = Seq(
+         ("ids", userIds.mkString(","))
+@@ -42,7 +51,6 @@ object UsersEndpoint extends OauthSpotifyEndpoint {
+   /**
+     * Profiles
+     */
+-
+   def getUserProfile(userId: String): HttpRequest = {
+     createRequest(usersEndpoint + userId)
+   }
+diff --git a/src/main/scala/models/Album.scala b/src/main/scala/models/Album.scala
+index fc74c35..cb2ee3c 100644
+--- a/src/main/scala/models/Album.scala
++++ b/src/main/scala/models/Album.scala
+@@ -1,21 +1,21 @@
+ package models
+ 
+ case class Album(
+-                  album_type: String,
+-                  artists: List[ArtistSimple],
+-                  available_markets: List[String],
+-                  copyrights: List[Copyright],
+-                  external_ids: Map[String, String],
+-                  external_urls: Map[String, String],
+-                  genres: List[String],
+-                  href: String,
+-                  id: String,
+-                  images: List[Image],
+-                  name: String,
+-                  popularity: Int,
+-                  release_date: String,
+-                  release_date_precision: String,
+-                  tracks: Page[TrackSimple],
+-                  `type`: String,
+-                  uri: String
+-                )
+\ No newline at end of file
++    album_type: String,
++    artists: List[ArtistSimple],
++    available_markets: List[String],
++    copyrights: List[Copyright],
++    external_ids: Map[String, String],
++    external_urls: Map[String, String],
++    genres: List[String],
++    href: String,
++    id: String,
++    images: List[Image],
++    name: String,
++    popularity: Int,
++    release_date: String,
++    release_date_precision: String,
++    tracks: Page[TrackSimple],
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/AlbumSimple.scala b/src/main/scala/models/AlbumSimple.scala
+index 20b669c..353c597 100644
+--- a/src/main/scala/models/AlbumSimple.scala
++++ b/src/main/scala/models/AlbumSimple.scala
+@@ -1,13 +1,13 @@
+ package models
+ 
+ case class AlbumSimple(
+-                        album_type: String,
+-                        available_markets: List[String],
+-                        external_urls: Map[String, String],
+-                        href: String,
+-                        id: String,
+-                        images: List[Image],
+-                        name: String,
+-                        `type`: String,
+-                        uri: String
+-                      )
++    album_type: String,
++    available_markets: List[String],
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    images: List[Image],
++    name: String,
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/Artist.scala b/src/main/scala/models/Artist.scala
+index d7cf936..31711c4 100644
+--- a/src/main/scala/models/Artist.scala
++++ b/src/main/scala/models/Artist.scala
+@@ -1,14 +1,14 @@
+ package models
+ 
+ case class Artist(
+-                   external_urls: Map[String, String],
+-                   followers: Followers,
+-                   genres: List[String],
+-                   href: String,
+-                   id: String,
+-                   images: List[Image],
+-                   name: String,
+-                   popularity: Int,
+-                   `type`: String,
+-                   uri: String
+-                 )
+\ No newline at end of file
++    external_urls: Map[String, String],
++    followers: Followers,
++    genres: List[String],
++    href: String,
++    id: String,
++    images: List[Image],
++    name: String,
++    popularity: Int,
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/ArtistSimple.scala b/src/main/scala/models/ArtistSimple.scala
+index af6f0ab..e4261d6 100644
+--- a/src/main/scala/models/ArtistSimple.scala
++++ b/src/main/scala/models/ArtistSimple.scala
+@@ -1,10 +1,10 @@
+ package models
+ 
+ case class ArtistSimple(
+-                         external_urls: Map[String, String],
+-                         href: String,
+-                         id: String,
+-                         name: String,
+-                         `type`: String,
+-                         uri: String
+-                       )
+\ No newline at end of file
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    name: String,
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/AudioFeatures.scala b/src/main/scala/models/AudioFeatures.scala
+index 61060b7..81e0124 100644
+--- a/src/main/scala/models/AudioFeatures.scala
++++ b/src/main/scala/models/AudioFeatures.scala
+@@ -1,22 +1,22 @@
+ package models
+ 
+ case class AudioFeatures(
+-                        acousticness: Float,
+-                        analysis_url: String,
+-                        danceability: Float,
+-                        duration_ms: Int,
+-                        energy: Float,
+-                        id: String,
+-                        instrumentalness: Float,
+-                        key: Int,
+-                        liveness: Float,
+-                        loudness: Float,
+-                        mode: Int,
+-                        speechiness: Float,
+-                        tempo: Float,
+-                        time_signature: Float,
+-                        track_href: String,
+-                        `type`: String,
+-                        uri: String,
+-                        valence: Float
+-                        )
++    acousticness: Float,
++    analysis_url: String,
++    danceability: Float,
++    duration_ms: Int,
++    energy: Float,
++    id: String,
++    instrumentalness: Float,
++    key: Int,
++    liveness: Float,
++    loudness: Float,
++    mode: Int,
++    speechiness: Float,
++    tempo: Float,
++    time_signature: Float,
++    track_href: String,
++    `type`: String,
++    uri: String,
++    valence: Float
++)
+diff --git a/src/main/scala/models/Category.scala b/src/main/scala/models/Category.scala
+index 1a0507c..119810d 100644
+--- a/src/main/scala/models/Category.scala
++++ b/src/main/scala/models/Category.scala
+@@ -1,8 +1,8 @@
+ package models
+ 
+ case class Category(
+-                   href: String,
+-                   icons: List[Image],
+-                   id: String,
+-                   name: String
+-                   )
+\ No newline at end of file
++    href: String,
++    icons: List[Image],
++    id: String,
++    name: String
++)
+diff --git a/src/main/scala/models/Copyright.scala b/src/main/scala/models/Copyright.scala
+index 5aba88f..a502e1c 100644
+--- a/src/main/scala/models/Copyright.scala
++++ b/src/main/scala/models/Copyright.scala
+@@ -1,3 +1,3 @@
+ package models
+ 
+-case class Copyright(text: String, `type`: String)
+\ No newline at end of file
++case class Copyright(text: String, `type`: String)
+diff --git a/src/main/scala/models/Cursor.scala b/src/main/scala/models/Cursor.scala
+index 0ac1d08..ce6e3f4 100644
+--- a/src/main/scala/models/Cursor.scala
++++ b/src/main/scala/models/Cursor.scala
+@@ -1,5 +1,5 @@
+ package models
+ 
+ case class Cursor(
+-                 after: String
+-                 )
++    after: String
++)
+diff --git a/src/main/scala/models/CursorPage.scala b/src/main/scala/models/CursorPage.scala
+index be710a3..b6cfb7e 100644
+--- a/src/main/scala/models/CursorPage.scala
++++ b/src/main/scala/models/CursorPage.scala
+@@ -1,10 +1,10 @@
+ package models
+ 
+ case class CursorPage[T](
+-                 href: String,
+-                 items: List[T],
+-                 limit: Int,
+-                 next: Option[String],
+-                 cursors: Cursor,
+-                 total: Int
+-                 )
++    href: String,
++    items: List[T],
++    limit: Int,
++    next: Option[String],
++    cursors: Cursor,
++    total: Int
++)
+diff --git a/src/main/scala/models/FeaturedPlaylist.scala b/src/main/scala/models/FeaturedPlaylist.scala
+index 7908dfb..7205db9 100644
+--- a/src/main/scala/models/FeaturedPlaylist.scala
++++ b/src/main/scala/models/FeaturedPlaylist.scala
+@@ -1,6 +1,6 @@
+ package models
+ 
+ case class FeaturedPlaylist(
+-                           message: String,
+-                           playlists: Page[PlaylistSimple]
+-                           )
++    message: String,
++    playlists: Page[PlaylistSimple]
++)
+diff --git a/src/main/scala/models/Followers.scala b/src/main/scala/models/Followers.scala
+index db991e0..021b66f 100644
+--- a/src/main/scala/models/Followers.scala
++++ b/src/main/scala/models/Followers.scala
+@@ -1,6 +1,6 @@
+ package models
+ 
+ case class Followers(
+-                    href: Option[String],
+-                    total: Int
+-                    )
++    href: Option[String],
++    total: Int
++)
+diff --git a/src/main/scala/models/Page.scala b/src/main/scala/models/Page.scala
+index 0f26f80..afb3afe 100644
+--- a/src/main/scala/models/Page.scala
++++ b/src/main/scala/models/Page.scala
+@@ -1,11 +1,11 @@
+ package models
+ 
+ case class Page[T](
+-                       href: String,
+-                       items: List[T],
+-                       limit: Int,
+-                       next: Option[String],
+-                       offset: Int,
+-                       previous: Option[String],
+-                       total: Int
+-                  )
+\ No newline at end of file
++    href: String,
++    items: List[T],
++    limit: Int,
++    next: Option[String],
++    offset: Int,
++    previous: Option[String],
++    total: Int
++)
+diff --git a/src/main/scala/models/Playlist.scala b/src/main/scala/models/Playlist.scala
+index f929561..87617b6 100644
+--- a/src/main/scala/models/Playlist.scala
++++ b/src/main/scala/models/Playlist.scala
+@@ -1,18 +1,18 @@
+ package models
+ 
+ case class Playlist(
+-                   collaborative: Boolean,
+-                   description: String,
+-                   external_urls: Map[String, String],
+-                   followers: Followers,
+-                   href: String,
+-                   id: String,
+-                   images: List[Image],
+-                   name: String,
+-                   owner: PublicUser,
+-                   public: Option[Boolean],
+-                   snapshot_id: String,
+-                   tracks: Page[PlaylistTrack],
+-                   `type`: String,
+-                   uri: String
+-                   )
++    collaborative: Boolean,
++    description: String,
++    external_urls: Map[String, String],
++    followers: Followers,
++    href: String,
++    id: String,
++    images: List[Image],
++    name: String,
++    owner: PublicUser,
++    public: Option[Boolean],
++    snapshot_id: String,
++    tracks: Page[PlaylistTrack],
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/PlaylistSimple.scala b/src/main/scala/models/PlaylistSimple.scala
+index 42668cf..585fd1c 100644
+--- a/src/main/scala/models/PlaylistSimple.scala
++++ b/src/main/scala/models/PlaylistSimple.scala
+@@ -1,16 +1,16 @@
+ package models
+ 
+ case class PlaylistSimple(
+-                           collaborative: Boolean,
+-                           external_urls: Map[String, String],
+-                           href: String,
+-                           id: String,
+-                           images: List[Image],
+-                           name: String,
+-                           owner: PublicUser,
+-                           public: Option[Boolean],
+-                           snapshot_id: String,
+-                           tracks: Map[String, String],
+-                           `type`: String,
+-                           uri: String
+-                         )
+\ No newline at end of file
++    collaborative: Boolean,
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    images: List[Image],
++    name: String,
++    owner: PublicUser,
++    public: Option[Boolean],
++    snapshot_id: String,
++    tracks: Map[String, String],
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/PlaylistTrack.scala b/src/main/scala/models/PlaylistTrack.scala
+index 684e68c..a13d4e2 100644
+--- a/src/main/scala/models/PlaylistTrack.scala
++++ b/src/main/scala/models/PlaylistTrack.scala
+@@ -1,8 +1,8 @@
+ package models
+ 
+ case class PlaylistTrack(
+-                          added_at: java.util.Date,
+-                          added_by: Option[PublicUser],
+-                          is_local: Boolean,
+-                          track: Track
+-                        )
++    added_at: java.util.Date,
++    added_by: Option[PublicUser],
++    is_local: Boolean,
++    track: Track
++)
+diff --git a/src/main/scala/models/PrivateUser.scala b/src/main/scala/models/PrivateUser.scala
+index 1c16216..15f9d9a 100644
+--- a/src/main/scala/models/PrivateUser.scala
++++ b/src/main/scala/models/PrivateUser.scala
+@@ -1,16 +1,16 @@
+ package models
+ 
+ case class PrivateUser(
+-                      birthdate: Option[String],
+-                      country: Option[String],
+-                      display_name: Option[String],
+-                      email: Option[String],
+-                      external_urls: Map[String, String],
+-                      followers: Followers,
+-                      href: String,
+-                      id: String,
+-                      images: List[Image],
+-                      product: Option[String],
+-                      `type`: String,
+-                      uri: String
+-                      )
+\ No newline at end of file
++    birthdate: Option[String],
++    country: Option[String],
++    display_name: Option[String],
++    email: Option[String],
++    external_urls: Map[String, String],
++    followers: Followers,
++    href: String,
++    id: String,
++    images: List[Image],
++    product: Option[String],
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/PublicUser.scala b/src/main/scala/models/PublicUser.scala
+index 60de00b..ef0efbf 100644
+--- a/src/main/scala/models/PublicUser.scala
++++ b/src/main/scala/models/PublicUser.scala
+@@ -1,12 +1,12 @@
+ package models
+ 
+ case class PublicUser(
+-                     display_name: Option[String],
+-                     external_urls: Map[String, String],
+-                     followers: Option[Followers],
+-                     href: String,
+-                     id: String,
+-                     images: Option[List[Image]],
+-                     `type`: String,
+-                     uri: String
+-                     )
+\ No newline at end of file
++    display_name: Option[String],
++    external_urls: Map[String, String],
++    followers: Option[Followers],
++    href: String,
++    id: String,
++    images: Option[List[Image]],
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/RecommendationSeed.scala b/src/main/scala/models/RecommendationSeed.scala
+index 5368050..efa5188 100644
+--- a/src/main/scala/models/RecommendationSeed.scala
++++ b/src/main/scala/models/RecommendationSeed.scala
+@@ -1,10 +1,10 @@
+ package models
+ 
+ case class RecommendationSeed(
+-                               afterFilteringSize: Int,
+-                               afterRelinkingSize: Int,
+-                               href: String,
+-                               id: String,
+-                               initialPoolSize: Int,
+-                               `type`: String
+-                             )
+\ No newline at end of file
++    afterFilteringSize: Int,
++    afterRelinkingSize: Int,
++    href: String,
++    id: String,
++    initialPoolSize: Int,
++    `type`: String
++)
+diff --git a/src/main/scala/models/Recommendations.scala b/src/main/scala/models/Recommendations.scala
+index d8bdee7..92dc9d1 100644
+--- a/src/main/scala/models/Recommendations.scala
++++ b/src/main/scala/models/Recommendations.scala
+@@ -1,6 +1,6 @@
+ package models
+ 
+ case class Recommendations(
+-                          seeds: List[RecommendationSeed],
+-                          tracks: List[TrackSimple]
+-                          )
++    seeds: List[RecommendationSeed],
++    tracks: List[TrackSimple]
++)
+diff --git a/src/main/scala/models/SavedAlbum.scala b/src/main/scala/models/SavedAlbum.scala
+index c8b95db..df69e0f 100644
+--- a/src/main/scala/models/SavedAlbum.scala
++++ b/src/main/scala/models/SavedAlbum.scala
+@@ -1,6 +1,6 @@
+ package models
+ 
+ case class SavedAlbum(
+-                     added_at: java.util.Date,
+-                     album: Album
+-                     )
++    added_at: java.util.Date,
++    album: Album
++)
+diff --git a/src/main/scala/models/SavedTrack.scala b/src/main/scala/models/SavedTrack.scala
+index 6929f3e..02b0d88 100644
+--- a/src/main/scala/models/SavedTrack.scala
++++ b/src/main/scala/models/SavedTrack.scala
+@@ -1,6 +1,6 @@
+ package models
+ 
+ case class SavedTrack(
+-                       added_at: java.util.Date,
+-                       track: Track
+-                     )
+\ No newline at end of file
++    added_at: java.util.Date,
++    track: Track
++)
+diff --git a/src/main/scala/models/SearchResult.scala b/src/main/scala/models/SearchResult.scala
+index 211d93b..be4cd7f 100644
+--- a/src/main/scala/models/SearchResult.scala
++++ b/src/main/scala/models/SearchResult.scala
+@@ -1,8 +1,8 @@
+ package models
+ 
+ case class SearchResult(
+-                       albums: Option[Page[AlbumSimple]],
+-                       artists: Option[Page[Artist]],
+-                       tracks: Option[Page[Track]],
+-                       playlists: Option[Page[PlaylistSimple]]
+-                       )
+\ No newline at end of file
++    albums: Option[Page[AlbumSimple]],
++    artists: Option[Page[Artist]],
++    tracks: Option[Page[Track]],
++    playlists: Option[Page[PlaylistSimple]]
++)
+diff --git a/src/main/scala/models/Track.scala b/src/main/scala/models/Track.scala
+index 1d5579d..2a49eab 100644
+--- a/src/main/scala/models/Track.scala
++++ b/src/main/scala/models/Track.scala
+@@ -1,22 +1,22 @@
+ package models
+ 
+ case class Track(
+-                album: AlbumSimple,
+-                artists: List[ArtistSimple],
+-                available_markets: List[String],
+-                disc_number: Int,
+-                duration_ms: Int,
+-                explicit: Boolean,
+-                external_ids: Map[String, String],
+-                external_urls: Map[String, String],
+-                href: String,
+-                id: String,
+-                is_playable: Option[Boolean],
+-                linked_from: Option[TrackLink],
+-                name: String,
+-                popularity: Int,
+-                preview_url: String,
+-                track_number: Int,
+-                `type`: String,
+-                uri: String
+-                )
++    album: AlbumSimple,
++    artists: List[ArtistSimple],
++    available_markets: List[String],
++    disc_number: Int,
++    duration_ms: Int,
++    explicit: Boolean,
++    external_ids: Map[String, String],
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    is_playable: Option[Boolean],
++    linked_from: Option[TrackLink],
++    name: String,
++    popularity: Int,
++    preview_url: String,
++    track_number: Int,
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/TrackLink.scala b/src/main/scala/models/TrackLink.scala
+index 6167955..f17d10b 100644
+--- a/src/main/scala/models/TrackLink.scala
++++ b/src/main/scala/models/TrackLink.scala
+@@ -1,9 +1,9 @@
+ package models
+ 
+ case class TrackLink(
+-                    external_urls: Map[String, String],
+-                    href: String,
+-                    id: String,
+-                    `type`: String,
+-                    uri: String
+-                    )
+\ No newline at end of file
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    `type`: String,
++    uri: String
++)
+diff --git a/src/main/scala/models/TrackSimple.scala b/src/main/scala/models/TrackSimple.scala
+index 1f941e2..45ef73f 100644
+--- a/src/main/scala/models/TrackSimple.scala
++++ b/src/main/scala/models/TrackSimple.scala
+@@ -1,20 +1,19 @@
+ package models
+ 
+ case class TrackSimple(
+-                      artists: List[ArtistSimple],
+-                      available_markets: List[String],
+-                      disc_number: Int,
+-                      duration_ms: Int,
+-                      explicit: Boolean,
+-                      external_urls: Map[String, String],
+-                      href: String,
+-                      id: String,
+-                      is_playable: Option[Boolean],
+-                      linked_from: Option[TrackLink],
+-                      name: String,
+-                      preview_url: String,
+-                      track_number: Int,
+-                      `type`: String,
+-                      uri: String
+-                      )
+-
++    artists: List[ArtistSimple],
++    available_markets: List[String],
++    disc_number: Int,
++    duration_ms: Int,
++    explicit: Boolean,
++    external_urls: Map[String, String],
++    href: String,
++    id: String,
++    is_playable: Option[Boolean],
++    linked_from: Option[TrackLink],
++    name: String,
++    preview_url: String,
++    track_number: Int,
++    `type`: String,
++    uri: String
++)

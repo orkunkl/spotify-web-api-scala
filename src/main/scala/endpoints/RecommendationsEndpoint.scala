@@ -2,7 +2,6 @@ package endpoints
 
 import scalaj.http.HttpRequest
 
-
 object RecommendationsEndpoint extends OauthSpotifyEndpoint {
 
   private val recommendationsEndpoint = baseAPIUrl + "/v1/recommendations/"
@@ -23,7 +22,9 @@ object RecommendationsEndpoint extends OauthSpotifyEndpoint {
         ("seed_genres", seedGenres.mkString(",")),
         ("seed_tracks", seedTracks.mkString(","))
       )
-      createRequest(authToken = authToken, endpoint = recommendationsEndpoint, params = params)
+      createRequest(authToken = authToken,
+                    endpoint = recommendationsEndpoint,
+                    params = params)
     }
   }
 }

@@ -2,7 +2,6 @@ package endpoints
 
 import scalaj.http.HttpRequest
 
-
 object AlbumsEndpoint extends SpotifyEndpoint {
 
   private val albumEndpoint = baseAPIUrl + "/v1/albums/"
@@ -12,7 +11,8 @@ object AlbumsEndpoint extends SpotifyEndpoint {
   }
 
   def getAlbums(albumIds: Seq[String]): HttpRequest = {
-    createRequest(endpoint = albumEndpoint, params = Seq(("ids", albumIds.mkString(","))))
+    createRequest(endpoint = albumEndpoint,
+                  params = Seq(("ids", albumIds.mkString(","))))
   }
 
   def getAlbumTracks(albumId: String): HttpRequest = {

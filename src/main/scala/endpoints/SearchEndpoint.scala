@@ -2,7 +2,6 @@ package endpoints
 
 import scalaj.http.HttpRequest
 
-
 object SearchEndpoint extends SpotifyEndpoint {
 
   private val searchEndpoint = baseAPIUrl + "/v1/search/"

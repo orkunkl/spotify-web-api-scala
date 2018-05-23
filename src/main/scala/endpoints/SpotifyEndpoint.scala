@@ -8,7 +8,8 @@ abstract class SpotifyEndpoint {
 
   protected def createRequest(endpoint: String): HttpRequest = Http(endpoint)
 
-  protected def createRequest(endpoint: String, params: Seq[(String, String)]): HttpRequest = {
+  protected def createRequest(endpoint: String,
+                              params: Seq[(String, String)]): HttpRequest = {
     Http(endpoint).params(params)
   }
 }

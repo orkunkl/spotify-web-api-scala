@@ -1,5 +1,5 @@
 package models
 
 case class Cursor(
-                 after: String
-                 )
+    after: String
+)
