@@ -34,8 +34,6 @@ object AudioFeatures {
       (__ \ "energy").read[Float] and
       (__ \ "id").read[String] and
       (__ \ "instrumentalness").read[Float] and
-      (__ \ "key").read[String] and
-      (__ \ "liveness").read[Float] and
       (__ \ "key").read[Int] and
       (__ \ "liveness").read[Float] and
       (__ \ "loudness").read[Float] and

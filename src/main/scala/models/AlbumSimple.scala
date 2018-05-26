@@ -19,7 +19,7 @@ case class AlbumSimple(
 object AlbumSimple {
   implicit val albumSimpleReads: Reads[AlbumSimple] = (
     (__ \ "album_type").read[String] and
-      (__ \ "available_markets").read[String] and
+      (__ \ "available_markets").read[Seq[String]] and
       (__ \ "external_urls").read[Map[String, String]] and
       (__ \ "href").read[String] and
       (__ \ "id").read[String] and

@@ -26,7 +26,7 @@ object Album {
   implicit val albumReads: Reads[Album] = (
     (__ \ "album_type").read[String] and
       (__ \ "artists").read[Seq[ArtistSimple]] and
-      (__ \ "available_markets").read[String] and
+      (__ \ "available_markets").read[Seq[String]] and
       (__ \ "copyrights").read[Seq[Copyright]] and
       (__ \ "external_ids").read[Map[String, String]] and
       (__ \ "external_urls").read[Map[String, String]] and

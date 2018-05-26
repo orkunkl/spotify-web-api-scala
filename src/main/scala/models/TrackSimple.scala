@@ -31,7 +31,7 @@ object TrackSimple {
       (__ \ "explicit").read[Boolean] and
       (__ \ "external_urls").read[Map[String, String]] and
       (__ \ "href").read[String] and
-      (__ \ "id").read[Int] and
+      (__ \ "id").read[String] and
       (__ \ "is_playable").readNullable[Boolean] and
       (__ \ "linked_from").readNullable[TrackLink] and
       (__ \ "name").read[String] and

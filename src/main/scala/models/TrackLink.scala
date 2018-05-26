@@ -16,7 +16,7 @@ object TrackLink {
   implicit val trackLinkReads: Reads[TrackLink] = (
     (__ \ "external_urls").read[Map[String, String]] and
       (__ \ "href").read[String] and
-      (__ \ "id").read[Seq[String]] and
+      (__ \ "id").read[String] and
       (__ \ "type").read[String] and
       (__ \ "uri").read[String]
     )(TrackLink.apply _)

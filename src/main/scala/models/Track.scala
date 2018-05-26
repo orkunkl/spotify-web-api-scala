@@ -27,7 +27,7 @@ case class Track(
 
 object Track {
   implicit val trackReads: Reads[Track] = (
-    (__ \ "album").read[Album] and
+    (__ \ "album").read[AlbumSimple] and
       (__ \ "artists").read[Seq[ArtistSimple]] and
       (__ \ "available_markets").read[Seq[String]] and
       (__ \ "disc_number").read[Int] and
