@@ -8,8 +8,8 @@ case class Copyright(text: String, `type`: String)
 
 object Copyright {
   implicit val copyrightReads: Reads[Copyright] = (
-    (JsPath \ "text").read[String] and
-      (JsPath \ "type").read[String]
+    (__ \ "text").read[String] and
+      (__ \ "type").read[String]
     )(Copyright.apply _)
 }
 

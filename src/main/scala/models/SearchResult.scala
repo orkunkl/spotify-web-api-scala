@@ -15,10 +15,10 @@ case class SearchResult(
 
 object SearchResult {
   implicit val searchResultReads: Reads[SearchResult] = (
-    (JsPath \ "albums").readNullable[Page[AlbumSimple]] and
-      (JsPath \ "artists").readNullable[Page[Artist]] and
-      (JsPath \ "tracks").readNullable[Page[Track]] and
-      (JsPath \ "playlists").readNullable[Page[PlaylistSimple]]
+    (__ \ "albums").readNullable[Page[AlbumSimple]] and
+      (__ \ "artists").readNullable[Page[Artist]] and
+      (__ \ "tracks").readNullable[Page[Track]] and
+      (__ \ "playlists").readNullable[Page[PlaylistSimple]]
     )(SearchResult.apply _)
 }
 

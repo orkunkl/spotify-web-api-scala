@@ -11,8 +11,8 @@ case class SavedAlbum(
 
 object SavedAlbum {
   implicit val savedAlbumReads: Reads[SavedAlbum] = (
-    (JsPath \ "added_at").read[java.util.Date] and
-      (JsPath \ "album").read[Album]
+    (__ \ "added_at").read[java.util.Date] and
+      (__ \ "album").read[Album]
     )(SavedAlbum.apply _)
 }
 

@@ -13,10 +13,10 @@ case class PlaylistTrack(
 
 object PlaylistTrack {
   implicit val playlistTrackReads: Reads[PlaylistTrack] = (
-    (JsPath \ "added_at").read[java.util.Date] and
-      (JsPath \ "added_by").readNullable[PublicUser] and
-      (JsPath \ "is_local").read[Boolean] and
-      (JsPath \ "track").read[Track]
+    (__ \ "added_at").read[java.util.Date] and
+      (__ \ "added_by").readNullable[PublicUser] and
+      (__ \ "is_local").read[Boolean] and
+      (__ \ "track").read[Track]
     )(PlaylistTrack.apply _)
 }
 

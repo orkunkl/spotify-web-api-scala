@@ -11,8 +11,8 @@ case class Followers(
 
 object Followers {
   implicit val followersReads: Reads[Followers] = (
-    (JsPath \ "href").readNullable[String] and
-      (JsPath \ "total").read[Int]
+    (__ \ "href").readNullable[String] and
+      (__ \ "total").read[Int]
     )(Followers.apply _)
 }
 

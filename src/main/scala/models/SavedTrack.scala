@@ -11,8 +11,8 @@ case class SavedTrack(
 
 object SavedTrack {
   implicit val savedTrackReads: Reads[SavedTrack] = (
-    (JsPath \ "added_at").read[java.util.Date] and
-      (JsPath \ "track").read[Track]
+    (__ \ "added_at").read[java.util.Date] and
+      (__ \ "track").read[Track]
     )(SavedTrack.apply _)
 }
 

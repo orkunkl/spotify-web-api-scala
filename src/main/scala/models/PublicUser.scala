@@ -17,13 +17,13 @@ case class PublicUser(
 
 object PublicUser {
   implicit val publicUserReads: Reads[PublicUser] = (
-    (JsPath \ "display_name").readNullable[String] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "followers").readNullable[Followers] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "images").readNullable[Seq[Image]] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "display_name").readNullable[String] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "followers").readNullable[Followers] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "images").readNullable[Seq[Image]] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(PublicUser.apply _)
 }

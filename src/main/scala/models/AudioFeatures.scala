@@ -27,26 +27,26 @@ case class AudioFeatures(
 
 object AudioFeatures {
   implicit val audioFeaturesReads: Reads[AudioFeatures] = (
-    (JsPath \ "acousticness").read[Float] and
-      (JsPath \ "analysis_url").read[String] and
-      (JsPath \ "danceability").read[Float] and
-      (JsPath \ "duration_ms").read[Int] and
-      (JsPath \ "energy").read[Float] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "instrumentalness").read[Float] and
-      (JsPath \ "key").read[String] and
-      (JsPath \ "liveness").read[Float] and
-      (JsPath \ "key").read[Int] and
-      (JsPath \ "liveness").read[Float] and
-      (JsPath \ "loudness").read[Float] and
-      (JsPath \ "mode").read[Int] and
-      (JsPath \ "speechiness").read[Float] and
-      (JsPath \ "tempo").read[Float] and
-      (JsPath \ "time_signature").read[Float] and
-      (JsPath \ "track_href").read[String] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String] and
-      (JsPath \ "valence").read[Float]
+    (__ \ "acousticness").read[Float] and
+      (__ \ "analysis_url").read[String] and
+      (__ \ "danceability").read[Float] and
+      (__ \ "duration_ms").read[Int] and
+      (__ \ "energy").read[Float] and
+      (__ \ "id").read[String] and
+      (__ \ "instrumentalness").read[Float] and
+      (__ \ "key").read[String] and
+      (__ \ "liveness").read[Float] and
+      (__ \ "key").read[Int] and
+      (__ \ "liveness").read[Float] and
+      (__ \ "loudness").read[Float] and
+      (__ \ "mode").read[Int] and
+      (__ \ "speechiness").read[Float] and
+      (__ \ "tempo").read[Float] and
+      (__ \ "time_signature").read[Float] and
+      (__ \ "track_href").read[String] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String] and
+      (__ \ "valence").read[Float]
     )(AudioFeatures.apply _)
 }
 

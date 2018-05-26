@@ -21,17 +21,17 @@ case class PrivateUser(
 
 object PrivateUser {
   implicit val privateUserReads: Reads[PrivateUser] = (
-    (JsPath \ "birthdate").readNullable[String] and
-      (JsPath \ "country").readNullable[Followers] and
-      (JsPath \ "display_name").readNullable[String] and
-      (JsPath \ "email").readNullable[String] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "followers").read[Followers] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[Int] and
-      (JsPath \ "images").read[Seq[Image]] and
-      (JsPath \ "product").readNullable[String] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "birthdate").readNullable[String] and
+      (__ \ "country").readNullable[Followers] and
+      (__ \ "display_name").readNullable[String] and
+      (__ \ "email").readNullable[String] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "followers").read[Followers] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[Int] and
+      (__ \ "images").read[Seq[Image]] and
+      (__ \ "product").readNullable[String] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(PrivateUser.apply _)
 }

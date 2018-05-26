@@ -11,8 +11,8 @@ case class Recommendations(
 
 object Recommendations {
   implicit val recommendationReads: Reads[Recommendations] = (
-    (JsPath \ "seeds").read[Seq[RecommendationSeed]] and
-      (JsPath \ "tracks").read[Seq[TrackSimple]]
+    (__ \ "seeds").read[Seq[RecommendationSeed]] and
+      (__ \ "tracks").read[Seq[TrackSimple]]
     )(Recommendations.apply _)
 }
 

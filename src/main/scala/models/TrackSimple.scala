@@ -24,21 +24,21 @@ case class TrackSimple(
 
 object TrackSimple {
   implicit val trackSimpleReads: Reads[TrackSimple] = (
-    (JsPath \ "artists").read[Seq[ArtistSimple]] and
-      (JsPath \ "available_markets").read[Seq[String]] and
-      (JsPath \ "disc_number").read[Int] and
-      (JsPath \ "duration_ms").read[Int] and
-      (JsPath \ "explicit").read[Boolean] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[Int] and
-      (JsPath \ "is_playable").readNullable[Boolean] and
-      (JsPath \ "linked_from").readNullable[TrackLink] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "preview_url").read[String] and
-      (JsPath \ "track_number").read[Int] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "artists").read[Seq[ArtistSimple]] and
+      (__ \ "available_markets").read[Seq[String]] and
+      (__ \ "disc_number").read[Int] and
+      (__ \ "duration_ms").read[Int] and
+      (__ \ "explicit").read[Boolean] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[Int] and
+      (__ \ "is_playable").readNullable[Boolean] and
+      (__ \ "linked_from").readNullable[TrackLink] and
+      (__ \ "name").read[String] and
+      (__ \ "preview_url").read[String] and
+      (__ \ "track_number").read[Int] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(TrackSimple.apply _)
 }
 

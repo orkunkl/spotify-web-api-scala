@@ -24,23 +24,23 @@ case class Album(
 
 object Album {
   implicit val albumReads: Reads[Album] = (
-    (JsPath \ "album_type").read[String] and 
-      (JsPath \ "artists").read[Seq[Artist]] and
-      (JsPath \ "available_markets").read[String] and
-      (JsPath \ "copyrights").read[Seq[Copyright]] and
-      (JsPath \ "external_ids").read[Map[String, String]] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "genres").read[Seq[String]] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "images").read[Seq[Image]] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "popularity").read[Int] and
-      (JsPath \ "release_date").read[String] and
-      (JsPath \ "release_date_precision").read[String] and
-      (JsPath \ "tracks").read[Page[TrackSimple]] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "album_type").read[String] and
+      (__ \ "artists").read[Seq[ArtistSimple]] and
+      (__ \ "available_markets").read[String] and
+      (__ \ "copyrights").read[Seq[Copyright]] and
+      (__ \ "external_ids").read[Map[String, String]] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "genres").read[Seq[String]] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "images").read[Seq[Image]] and
+      (__ \ "name").read[String] and
+      (__ \ "popularity").read[Int] and
+      (__ \ "release_date").read[String] and
+      (__ \ "release_date_precision").read[String] and
+      (__ \ "tracks").read[Page[TrackSimple]] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(Album.apply _)
 }
 

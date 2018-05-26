@@ -23,19 +23,19 @@ case class Playlist(
 
 object Playlist {
   implicit val playListReads: Reads[Playlist] = (
-    (JsPath \ "collaborative").read[Boolean] and
-      (JsPath \ "description").read[String] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "followers").read[Followers] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "images").read[Seq[Image]] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "owner").read[PublicUser] and
-      (JsPath \ "public").readNullable[Boolean] and
-      (JsPath \ "snapshot_id").read[String] and
-      (JsPath \ "tracks").read[Page[PlaylistTrack]] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "collaborative").read[Boolean] and
+      (__ \ "description").read[String] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "followers").read[Followers] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "images").read[Seq[Image]] and
+      (__ \ "name").read[String] and
+      (__ \ "owner").read[PublicUser] and
+      (__ \ "public").readNullable[Boolean] and
+      (__ \ "snapshot_id").read[String] and
+      (__ \ "tracks").read[Page[PlaylistTrack]] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(Playlist.apply _)
 }

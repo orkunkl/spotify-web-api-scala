@@ -16,12 +16,12 @@ case class ArtistSimple(
 
 object ArtistSimple {
   implicit val artistSimpleReads: Reads[ArtistSimple] =
-    ((JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    ((__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "name").read[String] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(ArtistSimple.apply _)
 }
 

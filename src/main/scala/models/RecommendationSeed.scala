@@ -15,12 +15,12 @@ case class RecommendationSeed(
 
 object RecommendationSeed {
   implicit val recommendationSeedReads: Reads[RecommendationSeed] = (
-    (JsPath \ "afterFilteringSize").read[Int] and
-      (JsPath \ "afterRelinkingSize").read[Int] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "initialPoolSize").read[Int] and
-      (JsPath \ "type").read[String]
+    (__ \ "afterFilteringSize").read[Int] and
+      (__ \ "afterRelinkingSize").read[Int] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "initialPoolSize").read[Int] and
+      (__ \ "type").read[String]
     )(RecommendationSeed.apply _)
 }
 

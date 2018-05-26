@@ -11,8 +11,8 @@ case class FeaturedPlaylist(
 
 object FeaturedPlaylist {
   implicit val featuredPlaylistReads: Reads[FeaturedPlaylist] = (
-    (JsPath \ "message").read[String] and
-      (JsPath \ "playlists").read[Page[PlaylistSimple]]
+    (__ \ "message").read[String] and
+      (__ \ "playlists").read[Page[PlaylistSimple]]
     )(FeaturedPlaylist.apply _)
 }
 

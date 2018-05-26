@@ -19,16 +19,16 @@ case class Artist(
 
 object Artist {
   implicit val artistReads: Reads[Artist] = (
-    (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "followers").read[Followers] and
-      (JsPath \ "genres").read[Seq[String]] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "images").read[Seq[Image]] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "popularity").read[Int] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "followers").read[Followers] and
+      (__ \ "genres").read[Seq[String]] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "images").read[Seq[Image]] and
+      (__ \ "name").read[String] and
+      (__ \ "popularity").read[Int] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(Artist.apply _)
 }
 

@@ -18,15 +18,15 @@ case class AlbumSimple(
 
 object AlbumSimple {
   implicit val albumSimpleReads: Reads[AlbumSimple] = (
-    (JsPath \ "album_type").read[String] and
-      (JsPath \ "available_markets").read[String] and
-      (JsPath \ "external_urls").read[Map[String, String]] and
-      (JsPath \ "href").read[String] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "images").read[Seq[Image]] and
-      (JsPath \ "name").read[String] and
-      (JsPath \ "type").read[String] and
-      (JsPath \ "uri").read[String]
+    (__ \ "album_type").read[String] and
+      (__ \ "available_markets").read[String] and
+      (__ \ "external_urls").read[Map[String, String]] and
+      (__ \ "href").read[String] and
+      (__ \ "id").read[String] and
+      (__ \ "images").read[Seq[Image]] and
+      (__ \ "name").read[String] and
+      (__ \ "type").read[String] and
+      (__ \ "uri").read[String]
     )(AlbumSimple.apply _)
 }
 

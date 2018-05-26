@@ -13,10 +13,10 @@ case class Category(
 
 object Category {
   implicit val categoryReads: Reads[Category] = (
-    (JsPath \ "href").read[String] and
-      (JsPath \ "icons").read[Seq[Image]] and
-      (JsPath \ "id").read[String] and
-      (JsPath \ "name").read[String]
+    (__ \ "href").read[String] and
+      (__ \ "icons").read[Seq[Image]] and
+      (__ \ "id").read[String] and
+      (__ \ "name").read[String]
     )(Category.apply _)
 }
 
