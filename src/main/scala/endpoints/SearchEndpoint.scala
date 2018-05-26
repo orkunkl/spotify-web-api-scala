@@ -4,7 +4,7 @@ import scalaj.http.HttpRequest
 
 object SearchEndpoint extends SpotifyEndpoint {
 
-  private val searchEndpoint = baseAPIUrl + "/v1/search/"
+  private val searchEndpoint = conf.endpoints.searchEndpoint
 
   def search(query: String, queryType: Seq[String]): HttpRequest = {
     val params = Seq(

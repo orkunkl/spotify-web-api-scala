@@ -15,7 +15,7 @@ import org.json4s.jackson.JsonMethods._
   * @param authToken oauthToken used to make API calls which require authorization
   *
   */
-class SpotifyClient(authToken: String = "") {
+class SpotifyClient(authToken: String = "") { httpClient =>
 
   implicit val formats = new DefaultFormats {
     override def dateFormatter: SimpleDateFormat =
@@ -338,3 +338,4 @@ class SpotifyClient(authToken: String = "") {
     }
   }
 }
+
